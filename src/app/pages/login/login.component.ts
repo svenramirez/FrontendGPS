@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 // Update the import path if necessary, or create the file if it doesn't exist
 import { ApiService } from '../../core/services/api.service';
 
@@ -8,7 +9,7 @@ import { ApiService } from '../../core/services/api.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -17,12 +18,35 @@ export class LoginComponent {
   rol: string = '';
   loading: boolean = false;
   message: string = '';
+  codeError: string = '';
+  rolError: string = '';
 
   constructor(private apiService: ApiService) {}
 
   login() {
-    if (!this.code || !this.rol) {
-      this.message = 'Por favor, ingresa tu código y rol.';
+    this.codeError = '';
+    this.rolError = '';
+    let valid = true;
+
+    if (!this.code) {
+      this.codeError = 'El código es obligatorio.';
+      valid = false;
+    } else if (!/^\d{7,10}$/.test(this.code)) {
+      this.codeError = 'El código debe ser un número de 7 a 10 dígitos.';
+      valid = false;
+    }
+
+    // Validación de rol: requerido y solo letras
+    if (!this.rol) {
+      this.rolError = 'El rol es obligatorio.';
+      valid = false;
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(this.rol)) {
+      this.rolError = 'El rol solo debe contener letras.';
+      valid = false;
+    }
+
+    if (!valid) {
+      this.message = '';
       return;
     }
 
