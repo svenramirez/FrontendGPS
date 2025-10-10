@@ -32,6 +32,13 @@
       <div *ngIf="emailError" class="error-message">{{ emailError }}</div>
     </div>
 
+
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" [(ngModel)]="student.password" name="password" placeholder="Contraseña" [class.input-error]="passwordError" />
+      <div *ngIf="passwordError" class="error-message">{{ passwordError }}</div>
+    </div>
+
     <button type="submit" [disabled]="loading">
       {{ loading ? 'Registrando...' : 'Registrar' }}
     </button>
