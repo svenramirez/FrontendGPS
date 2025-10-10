@@ -9,23 +9,23 @@
         type="text"
         [(ngModel)]="code"
         name="code"
-  placeholder="Ej: 2259371"
+        placeholder="Ej: 2259371"
         [class.input-error]="codeError"
       />
       <div *ngIf="codeError" class="error-message">{{ codeError }}</div>
     </div>
 
     <div class="form-group">
-      <label for="rol">Rol</label>
+      <label for="password">Contraseña</label>
       <input
-        id="rol"
-        type="text"
-        [(ngModel)]="rol"
-        name="rol"
-        placeholder="Ej: estudiante"
-        [class.input-error]="rolError"
+        id="password"
+        type="password"
+        [(ngModel)]="password"
+        name="password"
+        placeholder="Contraseña"
+        [class.input-error]="passwordError"
       />
-      <div *ngIf="rolError" class="error-message">{{ rolError }}</div>
+      <div *ngIf="passwordError" class="error-message">{{ passwordError }}</div>
     </div>
 
     <button type="submit" [disabled]="loading">

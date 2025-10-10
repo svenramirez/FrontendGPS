@@ -15,17 +15,17 @@ import { ApiService } from '../../core/services/api.service';
 })
 export class LoginComponent {
   code: string = '';
-  rol: string = '';
+  password: string = '';
   loading: boolean = false;
   message: string = '';
   codeError: string = '';
-  rolError: string = '';
+  passwordError: string = '';
 
   constructor(private apiService: ApiService) {}
 
   login() {
     this.codeError = '';
-    this.rolError = '';
+    this.passwordError = '';
     let valid = true;
 
     if (!this.code) {
@@ -36,12 +36,11 @@ export class LoginComponent {
       valid = false;
     }
 
-    // Validación de rol: requerido y solo letras
-    if (!this.rol) {
-      this.rolError = 'El rol es obligatorio.';
+    if (!this.password) {
+      this.passwordError = 'La contraseña es obligatoria.';
       valid = false;
-    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(this.rol)) {
-      this.rolError = 'El rol solo debe contener letras.';
+    } else if (this.password.length < 6) {
+      this.passwordError = 'La contraseña debe tener al menos 6 caracteres.';
       valid = false;
     }
 
@@ -53,7 +52,7 @@ export class LoginComponent {
     this.loading = true;
     this.message = '';
 
-    this.apiService.loginStudent(this.code, this.rol).subscribe({
+    this.apiService.loginStudent(this.code, this.password).subscribe({
       next: (res) => {
         this.loading = false;
 
@@ -62,7 +61,7 @@ export class LoginComponent {
           this.message = `✅ Bienvenido, ${user.name}`;
           console.log('Usuario autenticado:', user);
         } else {
-          this.message = '❌ Código o rol incorrectos.';
+          this.message = '❌ Código o contraseña incorrectos.';
         }
       },
       error: (err) => {

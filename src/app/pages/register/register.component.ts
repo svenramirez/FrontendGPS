@@ -17,7 +17,8 @@ export class RegisterComponent {
     name: '',
     rol: '',
     semester: '',
-    email: ''
+    email: '',
+    password: ''
   };
 
   message = '';
@@ -27,6 +28,7 @@ export class RegisterComponent {
   rolError: string = '';
   semesterError: string = '';
   emailError: string = '';
+  passwordError: string = '';
 
   constructor(private apiService: ApiService) {}
 
@@ -36,7 +38,7 @@ export class RegisterComponent {
     this.rolError = '';
     this.semesterError = '';
     this.emailError = '';
-    let valid = true;
+  let valid = true;
 
     // Código: requerido y solo números (DNI)
     if (!this.student.code) {
@@ -83,6 +85,15 @@ export class RegisterComponent {
       valid = false;
     }
 
+    // Contraseña: requerida y mínimo 6 caracteres
+    if (!this.student.password) {
+      this.passwordError = 'La contraseña es obligatoria.';
+      valid = false;
+    } else if (this.student.password.length < 6) {
+      this.passwordError = 'La contraseña debe tener al menos 6 caracteres.';
+      valid = false;
+    }
+
     if (!valid) {
       this.message = '';
       return;
@@ -98,7 +109,7 @@ export class RegisterComponent {
         console.log('Estudiante registrado:', res);
 
         // Reiniciar formulario
-        this.student = { code: '', name: '', rol: '', semester: '', email: '' };
+  this.student = { code: '', name: '', rol: '', semester: '', email: '', password: '' };
       },
       error: (err) => {
         this.loading = false;

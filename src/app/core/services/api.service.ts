@@ -21,10 +21,10 @@ export class ApiService {
     return this.http.post<any>(this.baseUrl, student);
   }
 
-  // ✅ Login básico verificando código y rol
-  loginStudent(code: string, rol: string): Observable<any[]> {
-    // filtra por código y rol
-    return this.http.get<any[]>(`${this.baseUrl}?code=${code}&rol=${rol}`);
+  // ✅ Login básico verificando código y contraseña
+  loginStudent(code: string, password: string): Observable<any[]> {
+    // filtra por código y contraseña
+    return this.http.get<any[]>(`${this.baseUrl}?code=${code}&password=${password}`);
   }
 
   // ✅ Obtener estudiante por ID (opcional)
