@@ -1,42 +1,42 @@
 <div class="register-container">
   <h2>Registro de Estudiante</h2>
 
-  <form (submit)="register(); $event.preventDefault()">
+
+  <form [formGroup]="registerForm" (ngSubmit)="register()">
     <div class="form-group">
       <label for="code">Código</label>
-  <input id="code" type="text" [(ngModel)]="student.code" name="code" placeholder="Ej: 2259371" [class.input-error]="codeError" />
-      <div *ngIf="codeError" class="error-message">{{ codeError }}</div>
+      <input id="code" type="text" formControlName="code" placeholder="Ej: 2259371" [class.input-error]="registerForm.get('code')?.invalid && registerForm.get('code')?.touched" />
+      <app-field-error [control]="registerForm.get('code')"></app-field-error>
     </div>
 
     <div class="form-group">
       <label for="name">Nombre</label>
-      <input id="name" type="text" [(ngModel)]="student.name" name="name" placeholder="Ej: Steven Ramirez" [class.input-error]="nameError" />
-      <div *ngIf="nameError" class="error-message">{{ nameError }}</div>
+      <input id="name" type="text" formControlName="name" placeholder="Ej: Steven Ramirez" [class.input-error]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" />
+      <app-field-error [control]="registerForm.get('name')"></app-field-error>
     </div>
 
     <div class="form-group">
       <label for="rol">Rol</label>
-      <input id="rol" type="text" [(ngModel)]="student.rol" name="rol" placeholder="Ej: estudiante" [class.input-error]="rolError" />
-      <div *ngIf="rolError" class="error-message">{{ rolError }}</div>
+      <input id="rol" type="text" formControlName="rol" placeholder="Ej: estudiante" [class.input-error]="registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched" />
+      <app-field-error [control]="registerForm.get('rol')"></app-field-error>
     </div>
 
     <div class="form-group">
       <label for="semester">Semestre</label>
-      <input id="semester" type="number" [(ngModel)]="student.semester" name="semester" placeholder="Ej: 6" [class.input-error]="semesterError" />
-      <div *ngIf="semesterError" class="error-message">{{ semesterError }}</div>
+      <input id="semester" type="number" formControlName="semester" placeholder="Ej: 6" [class.input-error]="registerForm.get('semester')?.invalid && registerForm.get('semester')?.touched" />
+      <app-field-error [control]="registerForm.get('semester')"></app-field-error>
     </div>
 
     <div class="form-group">
       <label for="email">Correo</label>
-      <input id="email" type="email" [(ngModel)]="student.email" name="email" placeholder="Ej: steven@correo.com" [class.input-error]="emailError" />
-      <div *ngIf="emailError" class="error-message">{{ emailError }}</div>
+      <input id="email" type="email" formControlName="email" placeholder="Ej: steven@correo.com" [class.input-error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" />
+      <app-field-error [control]="registerForm.get('email')"></app-field-error>
     </div>
-
 
     <div class="form-group">
       <label for="password">Contraseña</label>
-      <input id="password" type="password" [(ngModel)]="student.password" name="password" placeholder="Contraseña" [class.input-error]="passwordError" />
-      <div *ngIf="passwordError" class="error-message">{{ passwordError }}</div>
+      <input id="password" type="password" formControlName="password" placeholder="Contraseña" [class.input-error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" />
+      <app-field-error [control]="registerForm.get('password')"></app-field-error>
     </div>
 
     <button type="submit" [disabled]="loading">

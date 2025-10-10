@@ -1,115 +1,47 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { FieldErrorComponent } from '../../shared/field-error/field-error.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, FieldErrorComponent],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
-  student = {
-    code: '',
-    name: '',
-    rol: '',
-    semester: '',
-    email: '',
-    password: ''
-  };
-
-  message = '';
+  registerForm: FormGroup;
   loading = false;
-  codeError: string = '';
-  nameError: string = '';
-  rolError: string = '';
-  semesterError: string = '';
-  emailError: string = '';
-  passwordError: string = '';
+  message = '';
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private fb: FormBuilder) {
+    this.registerForm = this.fb.group({
+      code: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
+      name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/)]],
+      rol: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/)]],
+      semester: ['', [Validators.required, Validators.min(1), Validators.max(12)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
 
   register() {
-    this.codeError = '';
-    this.nameError = '';
-    this.rolError = '';
-    this.semesterError = '';
-    this.emailError = '';
-  let valid = true;
-
-    // Código: requerido y solo números (DNI)
-    if (!this.student.code) {
-      this.codeError = 'El código es obligatorio.';
-      valid = false;
-    } else if (!/^\d{7,10}$/.test(this.student.code)) {
-      this.codeError = 'El código debe ser un número de 7 a 10 dígitos.';
-      valid = false;
-    }
-
-    // Nombre: requerido y solo letras y espacios
-    if (!this.student.name) {
-      this.nameError = 'El nombre es obligatorio.';
-      valid = false;
-    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(this.student.name)) {
-      this.nameError = 'El nombre solo debe contener letras.';
-      valid = false;
-    }
-
-    // Rol: requerido y solo letras
-    if (!this.student.rol) {
-      this.rolError = 'El rol es obligatorio.';
-      valid = false;
-    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(this.student.rol)) {
-      this.rolError = 'El rol solo debe contener letras.';
-      valid = false;
-    }
-
-    // Semestre: requerido y número entre 1 y 12
-    if (!this.student.semester) {
-      this.semesterError = 'El semestre es obligatorio.';
-      valid = false;
-    } else if (isNaN(Number(this.student.semester)) || Number(this.student.semester) < 1 || Number(this.student.semester) > 12) {
-      this.semesterError = 'El semestre debe ser un número entre 1 y 12.';
-      valid = false;
-    }
-
-    // Email: requerido y formato válido
-    if (!this.student.email) {
-      this.emailError = 'El correo es obligatorio.';
-      valid = false;
-    } else if (!/^\S+@\S+\.\S+$/.test(this.student.email)) {
-      this.emailError = 'El correo no es válido.';
-      valid = false;
-    }
-
-    // Contraseña: requerida y mínimo 6 caracteres
-    if (!this.student.password) {
-      this.passwordError = 'La contraseña es obligatoria.';
-      valid = false;
-    } else if (this.student.password.length < 6) {
-      this.passwordError = 'La contraseña debe tener al menos 6 caracteres.';
-      valid = false;
-    }
-
-    if (!valid) {
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
       this.message = '';
       return;
     }
-
     this.loading = true;
     this.message = '';
-
-    this.apiService.registerStudent(this.student).subscribe({
+    this.apiService.registerStudent(this.registerForm.value).subscribe({
       next: (res) => {
         this.loading = false;
         this.message = `✅ Estudiante ${res.name} registrado correctamente.`;
         console.log('Estudiante registrado:', res);
-
-        // Reiniciar formulario
-  this.student = { code: '', name: '', rol: '', semester: '', email: '', password: '' };
+        this.registerForm.reset();
       },
       error: (err) => {
         this.loading = false;
