@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FieldErrorComponent } from '../../shared/field-error/field-error.component';
 import { RouterModule } from '@angular/router';
 // Update the import path if necessary, or create the file if it doesn't exist
 import { ApiService } from '../../core/services/api.service';
@@ -9,53 +10,34 @@ import { ApiService } from '../../core/services/api.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, FieldErrorComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  code: string = '';
-  password: string = '';
+  loginForm: FormGroup;
   loading: boolean = false;
   message: string = '';
-  codeError: string = '';
-  passwordError: string = '';
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private fb: FormBuilder) {
+    this.loginForm = this.fb.group({
+      code: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
 
   login() {
-    this.codeError = '';
-    this.passwordError = '';
-    let valid = true;
-
-    if (!this.code) {
-      this.codeError = 'El código es obligatorio.';
-      valid = false;
-    } else if (!/^\d{7,10}$/.test(this.code)) {
-      this.codeError = 'El código debe ser un número de 7 a 10 dígitos.';
-      valid = false;
-    }
-
-    if (!this.password) {
-      this.passwordError = 'La contraseña es obligatoria.';
-      valid = false;
-    } else if (this.password.length < 6) {
-      this.passwordError = 'La contraseña debe tener al menos 6 caracteres.';
-      valid = false;
-    }
-
-    if (!valid) {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       this.message = '';
       return;
     }
-
+    const { code, password } = this.loginForm.value;
     this.loading = true;
     this.message = '';
-
-    this.apiService.loginStudent(this.code, this.password).subscribe({
+    this.apiService.loginStudent(code, password).subscribe({
       next: (res) => {
         this.loading = false;
-
         if (res.length > 0) {
           const user = res[0];
           this.message = `✅ Bienvenido, ${user.name}`;
