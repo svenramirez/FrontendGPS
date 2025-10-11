@@ -19,7 +19,7 @@ export class LoginComponent {
 
   constructor(private readonly authService: AuthService, private readonly fb: FormBuilder) {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.pattern(/^(?:\d{7,10}|\d{6,}-\d{4,})$/)]],
+      username: ['', [Validators.required,]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
