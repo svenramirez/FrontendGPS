@@ -1,0 +1,58 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Panel de control de Laboratorio</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card *ngFor="let stat of stats" class="stat-card" [class]="'stat-' + stat.color">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon">
+            <mat-icon [color]="stat.color">{{ stat.icon }}</mat-icon>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stat.value }}</h3>
+            <p>{{ stat.title }}</p>
+            <div class="stat-change" [class]="stat.changeType">
+              <mat-icon>{{ stat.changeType === 'positive' ? 'trending_up' : 'trending_down' }}</mat-icon>
+              <span>{{ stat.change }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+  
+
+    <!-- Alerts -->
+    <mat-card class="content-card">
+      <mat-card-header>
+        <mat-card-title>Alertas del Sistema</mat-card-title>
+        <mat-card-subtitle>Notificaciones importantes</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="alerts-container">
+          <div *ngFor="let alert of alerts" class="alert-item" [class]="'alert-' + alert.type">
+            <div class="alert-icon">
+              <mat-icon [color]="alert.type === 'error' ? 'warn' : alert.type === 'warning' ? 'accent' : 'primary'">
+                {{ getAlertIcon(alert.type) }}
+              </mat-icon>
+            </div>
+            <div class="alert-content">
+              <p class="alert-message">{{ alert.message }}</p>
+              <span class="alert-time">{{ alert.time }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+
+</div>
