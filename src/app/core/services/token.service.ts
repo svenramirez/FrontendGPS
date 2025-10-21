@@ -26,4 +26,16 @@ export class TokenService {
       name: decoded.name,
     };
   }
+
+
+  isTokenExpired(token: string): boolean {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      const expirationDate = new Date(decoded.exp * 1000); 
+      return expirationDate < new Date();
+    } catch (error) {
+      return true; 
+    }
+  }
 }
