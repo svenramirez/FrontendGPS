@@ -1,0 +1,257 @@
+<div class="attendance-container">
+  <div class="attendance-header">
+    <h1>Registro de Asistencias</h1>
+    <p>Sistema de control de acceso al laboratorio</p>
+  </div>
+
+  <div class="attendance-content">
+    <!-- FORMULARIO DE REGISTRO -->
+    <mat-card class="search-card glass-effect">
+      <mat-card-content>
+        <div class="card-title-section">
+          <div class="title-icon">
+            <mat-icon>search</mat-icon>
+          </div>
+          <div class="title-text">
+            <h2>Buscar Estudiante</h2>
+            <p>Ingrese el código universitario para registrar la asistencia</p>
+          </div>
+        </div>
+
+        <form [formGroup]="attendanceForm" (ngSubmit)="onSearchStudent()">
+          <div class="search-form">
+            <div class="input-wrapper">
+              <mat-form-field appearance="fill" class="full-width modern-input">
+                <input
+                  matInput
+                  formControlName="studentCode"
+                  placeholder="Ej: 2266301"
+                  maxlength="20"
+                  (keyup.enter)="onSearchStudent()"
+                  autocomplete="off"
+                />
+                <mat-icon matPrefix class="input-icon">badge</mat-icon>
+                <mat-error *ngIf="attendanceForm.get('studentCode')?.hasError('required')">
+                  Código requerido
+                </mat-error>
+                <mat-error *ngIf="attendanceForm.get('studentCode')?.hasError('minlength')">
+                  Mínimo 7 dígitos
+                </mat-error>
+                <mat-error *ngIf="attendanceForm.get('studentCode')?.hasError('pattern')">
+                  Solo números
+                </mat-error>
+              </mat-form-field>
+              <span class="input-hint">Mínimo 7 dígitos numéricos</span>
+            </div>
+
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="isLoading || attendanceForm.invalid"
+              class="search-button modern-button"
+            >
+              <span class="button-content">
+                <mat-icon *ngIf="!isLoading">how_to_reg</mat-icon>
+                <mat-progress-spinner
+                  *ngIf="isLoading"
+                  diameter="20"
+                  mode="indeterminate"
+                  class="spinner"
+                ></mat-progress-spinner>
+                <span class="button-text">
+                  {{ isLoading ? "Registrando..." : "Registrar" }}
+                </span>
+              </span>
+            </button>
+          </div>
+        </form>
+
+        <div *ngIf="errorMessage" class="error-message animate-in">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- INFORMACION DEL ESTUDIANTE -->
+    <mat-card *ngIf="studentData" class="student-card glass-effect animate-in">
+      <mat-card-content>
+        <div class="card-title-section success">
+          <div class="title-icon success">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="title-text">
+            <h2>¡Estudiante Encontrado!</h2>
+            <p>Asistencia registrada exitosamente</p>
+          </div>
+        </div>
+
+        <div class="student-info-grid">
+          <div class="info-card">
+            <div class="info-icon">
+              <mat-icon>badge</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Código</span>
+              <span class="info-value">{{ studentData.code }}</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Nombre Completo</span>
+              <span class="info-value">{{ studentData.name }}</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <mat-icon>email</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Correo Electrónico</span>
+              <span class="info-value">{{ studentData.email }}</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <mat-icon>credit_card</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Documento</span>
+              <span class="info-value">{{ studentData.document }}</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <mat-icon>school</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Rol</span>
+              <span class="info-value">{{ studentData.role?.name || "N/A" }}</span>
+            </div>
+          </div>
+
+          <div class="info-card highlight">
+            <div class="info-icon">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Hora de Registro</span>
+              <span class="info-value time">{{ currentTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button (click)="resetForm()" class="cancel-button modern-button">
+            <mat-icon>refresh</mat-icon>
+            <span>Nuevo Registro</span>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- LISTADO DE ASISTENCIAS -->
+    <mat-card class="list-card glass-effect">
+      <mat-card-content>
+        <div class="card-title-section">
+          <div class="title-icon">
+            <mat-icon>list</mat-icon>
+          </div>
+          <div class="title-text">
+            <h2>Historial de Asistencias</h2>
+            <p>Registro completo de accesos al laboratorio</p>
+          </div>
+        </div>
+
+        <!-- FILTROS -->
+        <form [formGroup]="filterForm" class="filters-section">
+          <div class="filters-grid">
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Fecha Inicio</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="start">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Fecha Fin</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="end">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Código de Estudiante</mat-label>
+              <input matInput formControlName="userCode" placeholder="Ej: 2266301">
+              <mat-icon matPrefix>search</mat-icon>
+            </mat-form-field>
+
+            <div class="filter-actions">
+              <button mat-raised-button color="primary" (click)="onFilterAttendances()" type="button">
+                <mat-icon>filter_list</mat-icon>
+                Filtrar
+              </button>
+              <button mat-stroked-button (click)="clearFilters()" type="button">
+                <mat-icon>clear</mat-icon>
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- TABLA DE ASISTENCIAS -->
+        <div class="table-container">
+          <div *ngIf="isLoadingList" class="loading-container">
+            <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+            <p>Cargando asistencias...</p>
+          </div>
+
+          <table mat-table [dataSource]="attendancesList" *ngIf="!isLoadingList && attendancesList.length > 0" class="attendance-table">
+            <ng-container matColumnDef="codigo">
+              <th mat-header-cell *matHeaderCellDef>Código</th>
+              <td mat-cell *matCellDef="let attendance">{{ attendance.user.code }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let attendance">{{ attendance.user.name }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="documento">
+              <th mat-header-cell *matHeaderCellDef>Documento</th>
+              <td mat-cell *matCellDef="let attendance">{{ attendance.user.document }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="rol">
+              <th mat-header-cell *matHeaderCellDef>Rol</th>
+              <td mat-cell *matCellDef="let attendance">
+                <span class="role-badge">{{ attendance.user.role.name }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef>Fecha y Hora</th>
+              <td mat-cell *matCellDef="let attendance">{{ formatDate(attendance.timestamp) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+
+          <div *ngIf="!isLoadingList && attendancesList.length === 0" class="no-data">
+            <mat-icon>inbox</mat-icon>
+            <p>No hay asistencias registradas</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,44 +1,73 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { apiConstants } from '../constants/api.constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
+  private baseUrl = apiConstants.BASE_URL;
 
-  private baseUrl = 'https://68e5f63521dd31f22cc38acb.mockapi.io/api/v1/students';
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-
-// ✅ Obtener todos los estudiantes
-  getStudents(): Observable<any[]> {
-    return this.http.get<any[]>(this.baseUrl);
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    });
   }
 
-  // ✅ Registrar un nuevo estudiante
-  registerStudent(student: any): Observable<any> {
-    return this.http.post<any>(this.baseUrl, student);
+  get<T>(endpoint: string, params?: { [key: string]: string | string[] }): Observable<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    let httpParams = new HttpParams();
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const value = params[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (Array.isArray(value)) {
+            value.forEach(v => httpParams = httpParams.append(key, v));
+          } else {
+            httpParams = httpParams.set(key, value);
+          }
+        }
+      });
+    }
+    
+    
+    return this.http.get<T>(url, {
+      headers: this.getHeaders(),
+      params: httpParams
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  // ✅ Login básico verificando código y contraseña
-  loginStudent(code: string, password: string): Observable<any[]> {
-    // filtra por código y contraseña
-    return this.http.get<any[]>(`${this.baseUrl}?code=${code}&password=${password}`);
+  post<T>(endpoint: string, data: any = {}): Observable<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    return this.http.post<T>(url, data, {
+      headers: this.getHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
-  // ✅ Obtener estudiante por ID (opcional)
-  getStudentById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${id}`);
-  }
-
-  // ✅ Actualizar estudiante (opcional)
-  updateStudent(id: string, data: any): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/${id}`, data);
-  }
-
-  // ✅ Eliminar estudiante (opcional)
-  deleteStudent(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/${id}`);
+  private handleError(error: HttpErrorResponse) {
+    console.error('API Error:', error);
+    let errorMessage = 'An unexpected error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      if (error.error && error.error.message) {
+        errorMessage = error.error.message;
+      }
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 }
