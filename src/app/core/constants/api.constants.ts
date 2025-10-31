@@ -5,5 +5,7 @@ export const apiConstants = {
         LOGIN: '/auth/login',
         ATTENDANCES: '/attendances',
         LIST_ATTENDANCES: '/attendances',
-        LABORATORIES: '/laboratories'
+        LABORATORIES: '/laboratories',
+        ASSIGN_USER_ROLE: '/users/:userCode/role',
+        LIST_USER: '/users'
 };
