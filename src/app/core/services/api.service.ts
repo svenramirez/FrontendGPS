@@ -37,7 +37,6 @@ export class ApiService {
       });
     }
     
-    
     return this.http.get<T>(url, {
       headers: this.getHeaders(),
       params: httpParams
@@ -49,6 +48,16 @@ export class ApiService {
   post<T>(endpoint: string, data: any = {}): Observable<T> {
     const url = `${this.baseUrl}${endpoint}`;
     return this.http.post<T>(url, data, {
+      headers: this.getHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // ✅ AGREGAR ESTE MÉTODO PUT
+  put<T>(endpoint: string, data: any = {}): Observable<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    return this.http.put<T>(url, data, {
       headers: this.getHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -68,6 +77,10 @@ export class ApiService {
       }
     }
     
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => ({ 
+      message: errorMessage,
+      status: error.status,
+      error: error.error 
+    }));
   }
 }
