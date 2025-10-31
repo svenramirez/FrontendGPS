@@ -4,5 +4,6 @@ export const apiConstants = {
         BASE_URL: environment.apiUrl,
         LOGIN: '/auth/login',
         ATTENDANCES: '/attendances',
-        LIST_ATTENDANCES: '/attendances'
+        LIST_ATTENDANCES: '/attendances',
+        LABORATORIES: '/laboratories'
 };

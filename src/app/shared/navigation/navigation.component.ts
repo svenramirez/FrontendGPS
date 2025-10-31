@@ -126,6 +126,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
         return [
           { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
           { label: 'Gestión de Usuarios', route: '/gestion-usuarios', icon: 'people' },
+          { label: 'Gestión de Laboratorios', route: '/gestion-laboratorios', icon: 'science' },
           { label: 'Registro Asistencias', route: '/registro-asistencias', icon: 'checklist' },
           { label: 'Servicios de Prácticas', route: '/servicios-practicas', icon: 'assignment' },
           { label: 'Ingresar Equipos', route: '/ingresar-equipos', icon: 'add_box' }
