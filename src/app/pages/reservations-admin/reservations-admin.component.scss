@@ -1,0 +1,86 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+
+  h2 {
+    margin: 0;
+  }
+
+  button {
+    height: 40px;
+    font-weight: 600;
+  }
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.slot-card {
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.slot-time {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+
+  mat-icon {
+    margin-right: 6px;
+  }
+}
+
+.slot-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+
+  mat-icon {
+    margin-right: 4px;
+    font-size: 18px;
+  }
+
+  &.available {
+    background: #e1f5e6;
+    color: #1b7f2b;
+  }
+
+  &.full {
+    background: #ffe0e0;
+    color: #c62828;
+  }
+}
+
+/* Card coloring */
+.slot-available {
+  background: #ebfff0;
+}
+
+.slot-full {
+  background: #ffebeb;
+  opacity: 0.75;
+}

@@ -82,7 +82,7 @@ export class UserManagementComponent implements OnInit {
     this.statistics.totalUsers = this.users.length;
     this.statistics.students = this.users.filter(user => user.role.name === 'ESTUDIANTE').length;
     this.statistics.teachers = this.users.filter(user => user.role.name === 'DOCENTE').length;
-    this.statistics.admins = this.users.filter(user => user.role.name === 'ADMINISTRADOR').length;
+    this.statistics.admins = this.users.filter(user => user.role.name === 'ADMIN').length;
   }
 
   get filteredUsers(): User[] {

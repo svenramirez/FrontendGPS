@@ -131,6 +131,14 @@ export class NavigationComponent implements OnInit, OnDestroy {
           { label: 'Servicios de Prácticas', route: '/servicios-practicas', icon: 'assignment' },
           { label: 'Ingresar Equipos', route: '/ingresar-equipos', icon: 'add_box' }
         ];
+      
+      case 'DOCENTE':
+        return [
+          { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
+          { label: 'Registro Asistencias', route: '/registro-asistencias', icon: 'checklist' },
+          { label: 'Servicios de Prácticas', route: '/servicios-practicas', icon: 'assignment' },
+      ];
+      
       case 'MONITOR':
         return [
           { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
