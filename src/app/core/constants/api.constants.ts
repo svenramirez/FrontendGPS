@@ -7,5 +7,6 @@ export const apiConstants = {
         LIST_ATTENDANCES: '/attendances',
         LABORATORIES: '/laboratories',
         ASSIGN_USER_ROLE: '/users/:userCode/role',
-        LIST_USER: '/users'
+        LIST_USER: '/users',
+        PRACTICES: '/practices'
 };

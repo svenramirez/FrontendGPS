@@ -1,0 +1,56 @@
+<div class="header">
+  <div>
+    <h2>Mis Prácticas Reservadas</h2>
+    <p>Aquí puedes ver tus prácticas agendadas</p>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="openScheduleForm()">
+    <mat-icon>add_circle</mat-icon>&nbsp; Agendar Práctica
+  </button>
+</div>
+
+<div class="schedule-grid">
+  <mat-card
+    *ngFor="let res of reservations"
+    class="slot-card"
+    [ngClass]="'slot-available'">
+
+    <!-- header fecha + laboratorio -->
+    <div class="slot-header">
+      <span class="slot-date">{{ res.date | date:'dd/MM/yyyy' }}</span>
+      <span class="slot-lab">
+        <mat-icon>science</mat-icon> {{ res.laboratoryName }}
+      </span>
+    </div>
+
+    <!-- Asignatura / Tema -->
+    <div class="slot-subject">
+      <mat-icon>book</mat-icon>
+      {{ res.subject }}
+    </div>
+
+    <!-- Tipo de práctica -->
+    <div class="slot-type">
+      <mat-icon>category</mat-icon>
+      {{ res.practiceType }}
+    </div>
+
+    <!-- Horario -->
+    <div class="slot-time">
+      <mat-icon>schedule</mat-icon>
+      {{ res.startTime }} - {{ res.endTime }}
+    </div>
+
+    <!-- Cantidad de estudiantes -->
+    <div class="slot-students">
+      <mat-icon>group</mat-icon>
+      {{ res.studentCount }} estudiante{{ res.studentCount > 1 ? 's' : '' }}
+    </div>
+
+    <!-- Duración -->
+    <div class="slot-duration">
+      <mat-icon>timer</mat-icon>
+      {{ res.durationMinutes }} min
+    </div>
+  </mat-card>
+</div>

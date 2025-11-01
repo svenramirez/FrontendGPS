@@ -26,33 +26,4 @@
     </mat-card>
   </div>
 
-  <!-- Main Content -->
-  <div class="main-content">
-  
-
-    <!-- Alerts -->
-    <mat-card class="content-card">
-      <mat-card-header>
-        <mat-card-title>Alertas del Sistema</mat-card-title>
-        <mat-card-subtitle>Notificaciones importantes</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="alerts-container">
-          <div *ngFor="let alert of alerts" class="alert-item" [class]="'alert-' + alert.type">
-            <div class="alert-icon">
-              <mat-icon [color]="alert.type === 'error' ? 'warn' : alert.type === 'warning' ? 'accent' : 'primary'">
-                {{ getAlertIcon(alert.type) }}
-              </mat-icon>
-            </div>
-            <div class="alert-content">
-              <p class="alert-message">{{ alert.message }}</p>
-              <span class="alert-time">{{ alert.time }}</span>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-
 </div>

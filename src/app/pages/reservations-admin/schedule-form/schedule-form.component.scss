@@ -1,0 +1,18 @@
+.form-container {
+  width: 100%;
+}
+
+.form-row {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.form-row mat-form-field {
+  width: 100%;
+}
+
+:host ::ng-deep .mat-dialog-container {
+  max-height: none;
+  overflow-y: visible;
+  border-radius: 16px;
+}
