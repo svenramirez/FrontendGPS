@@ -70,11 +70,22 @@ export class ReservationsAdminComponent implements OnInit {
       height: 'auto',         // Tamaño ideal
       maxWidth: '95vw',        // Responsive
       disableClose: true,
-      autoFocus: true
+      autoFocus: true,
+      role: 'dialog',
+      ariaLabel: 'Formulario para agendar práctica'
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) console.log(result);
+      if (result) {
+        console.log(result);
+        // Recargar las prácticas después de crear una nueva
+        this.ngOnInit();
+      }
     });
+  }
+
+  // Función para trackBy en *ngFor (mejora rendimiento)
+  trackByPracticeId(index: number, practice: Practice): number {
+    return practice.id;
   }
 }
