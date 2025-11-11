@@ -102,14 +102,6 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  onSearch(event: Event): void {
-    this.searchTerm = (event.target as HTMLInputElement).value;
-  }
-
-  onRoleFilterChange(event: Event): void {
-    this.selectedRoleFilter = (event.target as HTMLSelectElement).value;
-  }
-
   onStatusFilterChange(event: Event): void {
     this.selectedStatusFilter = (event.target as HTMLSelectElement).value;
   }
@@ -145,5 +137,15 @@ export class UserManagementComponent implements OnInit {
         });
       }
     });
+  }
+
+  // Método simple para búsqueda
+  onSearch(event: Event): void {
+    this.searchTerm = (event.target as HTMLInputElement).value;
+  }
+
+  // Método simple para cambio de filtro de rol
+  onRoleFilterChange(event: Event): void {
+    this.selectedRoleFilter = (event.target as HTMLSelectElement).value;
   }
 }

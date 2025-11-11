@@ -214,3 +214,36 @@ $gray-900: #212529;
     color: darken($danger-color, 10%);
   }
 }
+
+/* ============================================
+   MEJORAS BÁSICAS DE ACCESIBILIDAD
+   ============================================ */
+
+/* Focus visible básico */
+button:focus,
+input:focus,
+mat-select:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* Mejorar hover en cards */
+.stats__card {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Hover en tabla */
+tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Botones con tamaño mínimo */
+button {
+  min-height: 40px;
+  min-width: 40px;
+}
