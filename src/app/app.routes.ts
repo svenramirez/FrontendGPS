@@ -5,6 +5,8 @@ import { AttendanceRegisterComponent } from './pages/attendance-register/attenda
 import { LaboratoryManagementComponent } from './pages/laboratory-management/laboratory-management.component';
 import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { ReservationsAdminComponent } from './pages/reservations-admin/reservations-admin.component';
+import { LoanManagementComponent } from './pages/loan-management/loan-management.component';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -14,5 +16,6 @@ export const routes: Routes = [
   { path: 'registro-asistencias', component: AttendanceRegisterComponent },
   { path: 'gestion-laboratorios', component: LaboratoryManagementComponent },
   { path: 'servicios-practicas', component: ReservationsAdminComponent },
+  { path: 'prestamo-equipos', component: LoanManagementComponent },
   { path: '**', redirectTo: 'login' }
 ];
