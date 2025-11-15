@@ -159,6 +159,96 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- REPORTES MENSUALES -->
+    <mat-card class="reports-card glass-effect">
+      <mat-card-content>
+        <div class="card-title-section">
+          <div class="title-icon">
+            <mat-icon>assessment</mat-icon>
+          </div>
+          <div class="title-text">
+            <h2>Reportes Mensuales</h2>
+            <p>Genere reportes de asistencias en formato CSV o PDF</p>
+          </div>
+        </div>
+
+        <form [formGroup]="monthlyReportForm" class="monthly-report-form">
+          <div class="report-filters">
+            <mat-form-field appearance="fill" class="month-field">
+              <mat-label>Mes</mat-label>
+              <mat-select formControlName="month">
+                <mat-option *ngFor="let month of months" [value]="month.value">
+                  {{ month.name }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="year-field">
+              <mat-label>Año</mat-label>
+              <mat-select formControlName="year">
+                <mat-option *ngFor="let year of years" [value]="year">
+                  {{ year }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>date_range</mat-icon>
+            </mat-form-field>
+
+            <div class="export-buttons">
+              <button 
+                mat-raised-button 
+                color="accent" 
+                (click)="exportMonthlyReport('csv')"
+                [disabled]="isExporting || monthlyReportForm.invalid"
+                class="export-button"
+              >
+                <mat-icon *ngIf="!isExporting">file_download</mat-icon>
+                <mat-progress-spinner
+                  *ngIf="isExporting"
+                  diameter="20"
+                  mode="indeterminate"
+                  class="spinner"
+                ></mat-progress-spinner>
+                <span>{{ isExporting ? 'Generando...' : 'Exportar CSV' }}</span>
+              </button>
+
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="exportMonthlyReport('pdf')"
+                [disabled]="isExporting || monthlyReportForm.invalid"
+                class="export-button"
+              >
+                <mat-icon *ngIf="!isExporting">picture_as_pdf</mat-icon>
+                <mat-progress-spinner
+                  *ngIf="isExporting"
+                  diameter="20"
+                  mode="indeterminate"
+                  class="spinner"
+                ></mat-progress-spinner>
+                <span>{{ isExporting ? 'Generando...' : 'Exportar PDF' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="report-info">
+            <div class="info-item">
+              <mat-icon>info_outline</mat-icon>
+              <span>Los reportes incluyen todos los registros de asistencia del mes seleccionado</span>
+            </div>
+            <div class="info-item">
+              <mat-icon>file_copy</mat-icon>
+              <span>Formato CSV: Para análisis en Excel o Google Sheets</span>
+            </div>
+            <div class="info-item">
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>Formato PDF: Para presentaciones y archivo</span>
+            </div>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
     <!-- LISTADO DE ASISTENCIAS -->
     <mat-card class="list-card glass-effect">
       <mat-card-content>

@@ -12,9 +12,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../core/services/api.service';
 import { apiConstants } from '../../core/constants/api.constants';
 import { Attendance, AttendanceFilters } from '../../core/interfaces/attendance.interface';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-attendance-register',
@@ -31,7 +36,9 @@ import { Attendance, AttendanceFilters } from '../../core/interfaces/attendance.
     MatSnackBarModule,
     MatTableModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatSelectModule,
+    MatMenuModule
   ],
   templateUrl: './attendance-register.component.html',
   styleUrl: './attendance-register.component.scss'
@@ -39,14 +46,34 @@ import { Attendance, AttendanceFilters } from '../../core/interfaces/attendance.
 export class AttendanceRegisterComponent implements OnInit {
   attendanceForm: FormGroup;
   filterForm: FormGroup;
+  monthlyReportForm: FormGroup;
   isLoading = false;
   isLoadingList = false;
+  isExporting = false;
   studentData: any = null;
   errorMessage = '';
   
   // Lista de asistencias
   attendancesList: Attendance[] = [];
   displayedColumns: string[] = ['codigo', 'nombre', 'documento', 'rol', 'fecha'];
+
+  // Opciones para selector de mes
+  months = [
+    { value: 1, name: 'Enero' },
+    { value: 2, name: 'Febrero' },
+    { value: 3, name: 'Marzo' },
+    { value: 4, name: 'Abril' },
+    { value: 5, name: 'Mayo' },
+    { value: 6, name: 'Junio' },
+    { value: 7, name: 'Julio' },
+    { value: 8, name: 'Agosto' },
+    { value: 9, name: 'Septiembre' },
+    { value: 10, name: 'Octubre' },
+    { value: 11, name: 'Noviembre' },
+    { value: 12, name: 'Diciembre' }
+  ];
+
+  years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - i);
 
   constructor(
     private fb: FormBuilder,
@@ -62,6 +89,11 @@ export class AttendanceRegisterComponent implements OnInit {
       start: [''],
       end: [''],
       userCode: ['']
+    });
+
+    this.monthlyReportForm = this.fb.group({
+      month: [new Date().getMonth() + 1, Validators.required],
+      year: [new Date().getFullYear(), Validators.required]
     });
   }
 
@@ -201,6 +233,160 @@ export class AttendanceRegisterComponent implements OnInit {
       minute: '2-digit',
       second: '2-digit'
     });
+  }
+
+  // Métodos de exportación
+  async exportMonthlyReport(format: 'csv' | 'pdf') {
+    const month = this.monthlyReportForm.get('month')?.value;
+    const year = this.monthlyReportForm.get('year')?.value;
+
+    if (!month || !year) {
+      this.showSnackBar('Seleccione el mes y año para el reporte', 'error');
+      return;
+    }
+
+    this.isExporting = true;
+
+    // Calcular fechas de inicio y fin del mes
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const filters: AttendanceFilters = {
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    };
+
+    try {
+      // Obtener datos del mes específico
+      const params: { [key: string]: string } = {};
+      params['start'] = startDate.toISOString();
+      params['end'] = endDate.toISOString();
+
+      const response = await this.apiService.get<Attendance[]>(apiConstants.LIST_ATTENDANCES, params).toPromise();
+      
+      if (!response || response.length === 0) {
+        this.showSnackBar('No hay asistencias para el período seleccionado', 'error');
+        this.isExporting = false;
+        return;
+      }
+
+      const attendances = response.map(attendance => ({
+        ...attendance,
+        user: {
+          ...attendance.user,
+          name: this.decodeSpecialCharacters(attendance.user.name)
+        }
+      }));
+
+      if (format === 'csv') {
+        this.exportToCSV(attendances, month, year);
+      } else {
+        this.exportToPDF(attendances, month, year);
+      }
+
+      this.showSnackBar(`Reporte ${format.toUpperCase()} generado exitosamente`, 'success');
+    } catch (error) {
+      console.error('Error al generar reporte:', error);
+      this.showSnackBar('Error al generar el reporte', 'error');
+    } finally {
+      this.isExporting = false;
+    }
+  }
+
+  private exportToCSV(attendances: Attendance[], month: number, year: number) {
+    const monthName = this.months.find(m => m.value === month)?.name || month.toString();
+    
+    // Crear encabezados
+    const headers = ['Código', 'Nombre Completo', 'Documento', 'Rol', 'Fecha y Hora'];
+    
+    // Convertir datos a formato CSV
+    const csvData = attendances.map(attendance => [
+      attendance.user.code,
+      attendance.user.name,
+      attendance.user.document,
+      attendance.user.role.name,
+      this.formatDate(attendance.timestamp)
+    ]);
+
+    // Crear contenido CSV
+    const csvContent = [
+      `Reporte Mensual de Asistencias - ${monthName} ${year}`,
+      `Generado el: ${new Date().toLocaleString('es-CO')}`,
+      `Total de registros: ${attendances.length}`,
+      '', // Línea vacía
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, `reporte-asistencias-${monthName.toLowerCase()}-${year}.csv`);
+  }
+
+  private exportToPDF(attendances: Attendance[], month: number, year: number) {
+    const monthName = this.months.find(m => m.value === month)?.name || month.toString();
+    
+    // Crear documento PDF
+    const doc = new jsPDF();
+    
+    // Configurar fuentes y colores
+    doc.setFontSize(20);
+    doc.text('Reporte Mensual de Asistencias', 20, 25);
+    
+    doc.setFontSize(14);
+    doc.text(`Período: ${monthName} ${year}`, 20, 35);
+    doc.text(`Generado el: ${new Date().toLocaleString('es-CO')}`, 20, 45);
+    doc.text(`Total de registros: ${attendances.length}`, 20, 55);
+
+    // Preparar datos para la tabla
+    const tableData = attendances.map(attendance => [
+      attendance.user.code,
+      attendance.user.name,
+      attendance.user.document,
+      attendance.user.role.name,
+      this.formatDate(attendance.timestamp)
+    ]);
+
+    // Crear tabla
+    autoTable(doc, {
+      head: [['Código', 'Nombre Completo', 'Documento', 'Rol', 'Fecha y Hora']],
+      body: tableData,
+      startY: 65,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3
+      },
+      headStyles: {
+        fillColor: [33, 150, 243],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 45 }
+      }
+    });
+
+    // Agregar pie de página
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.width - 30,
+        doc.internal.pageSize.height - 10
+      );
+    }
+
+    // Descargar archivo
+    doc.save(`reporte-asistencias-${monthName.toLowerCase()}-${year}.pdf`);
   }
 
   private decodeSpecialCharacters(text: string): string {
