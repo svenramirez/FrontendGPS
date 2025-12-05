@@ -17,6 +17,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../core/services/api.service';
 import { apiConstants } from '../../core/constants/api.constants';
 import { Attendance, AttendanceFilters } from '../../core/interfaces/attendance.interface';
+import { AttendanceComparison, AttendanceComparisonFilters, AbsentStudent } from '../../core/interfaces/attendance-comparison.interface';
+import { AttendanceComparisonService } from '../../core/services/attendance-comparison.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { saveAs } from 'file-saver';
@@ -47,15 +49,23 @@ export class AttendanceRegisterComponent implements OnInit {
   attendanceForm: FormGroup;
   filterForm: FormGroup;
   monthlyReportForm: FormGroup;
+  comparisonForm: FormGroup;
   isLoading = false;
   isLoadingList = false;
   isExporting = false;
+  isLoadingComparison = false;
   studentData: any = null;
   errorMessage = '';
   
   // Lista de asistencias
   attendancesList: Attendance[] = [];
   displayedColumns: string[] = ['codigo', 'nombre', 'documento', 'rol', 'fecha'];
+  
+  // Comparación de asistencias
+  comparisonResults: AttendanceComparison[] = [];
+  absentStudents: AbsentStudent[] = [];
+  comparisonDisplayedColumns: string[] = ['practica', 'fecha', 'horario', 'esperados', 'asistentes', 'ausentes', 'tasa'];
+  absentDisplayedColumns: string[] = ['codigo', 'nombre', 'email', 'practica', 'fecha'];
 
   // Opciones para selector de mes
   months = [
@@ -79,7 +89,8 @@ export class AttendanceRegisterComponent implements OnInit {
     private fb: FormBuilder,
     private apiService: ApiService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private comparisonService: AttendanceComparisonService
   ) {
     this.attendanceForm = this.fb.group({
       studentCode: ['', [Validators.required, Validators.minLength(7), Validators.pattern('^[0-9]+$')]]
@@ -94,6 +105,13 @@ export class AttendanceRegisterComponent implements OnInit {
     this.monthlyReportForm = this.fb.group({
       month: [new Date().getMonth() + 1, Validators.required],
       year: [new Date().getFullYear(), Validators.required]
+    });
+
+    this.comparisonForm = this.fb.group({
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required],
+      laboratoryName: [''],
+      minAttendanceRate: [0, [Validators.min(0), Validators.max(100)]]
     });
   }
 
@@ -233,6 +251,21 @@ export class AttendanceRegisterComponent implements OnInit {
       minute: '2-digit',
       second: '2-digit'
     });
+  }
+
+  // Métodos auxiliares para estadísticas en template
+  getTotalExpectedStudents(): number {
+    return this.comparisonResults.reduce((sum, comp) => sum + comp.expectedStudents, 0);
+  }
+
+  getTotalAttendedStudents(): number {
+    return this.comparisonResults.reduce((sum, comp) => sum + comp.attendedStudents, 0);
+  }
+
+  getAverageAttendanceRate(): number {
+    if (this.comparisonResults.length === 0) return 0;
+    const total = this.comparisonResults.reduce((sum, comp) => sum + comp.attendanceRate, 0);
+    return Math.round((total / this.comparisonResults.length) * 100) / 100;
   }
 
   // Métodos de exportación
@@ -387,6 +420,225 @@ export class AttendanceRegisterComponent implements OnInit {
 
     // Descargar archivo
     doc.save(`reporte-asistencias-${monthName.toLowerCase()}-${year}.pdf`);
+  }
+
+  // Métodos de comparación de asistencias
+  async loadAttendanceComparison() {
+    if (this.comparisonForm.invalid) {
+      this.comparisonForm.markAllAsTouched();
+      this.showSnackBar('Complete los campos requeridos para la comparación', 'error');
+      return;
+    }
+
+    this.isLoadingComparison = true;
+    this.comparisonResults = [];
+    this.absentStudents = [];
+
+    try {
+      const filters: AttendanceComparisonFilters = {
+        startDate: this.comparisonForm.get('startDate')?.value,
+        endDate: this.comparisonForm.get('endDate')?.value,
+        laboratoryName: this.comparisonForm.get('laboratoryName')?.value || undefined,
+        minAttendanceRate: this.comparisonForm.get('minAttendanceRate')?.value || undefined
+      };
+
+      const comparisons = await this.comparisonService.getAttendanceComparison(filters).toPromise();
+      
+      if (comparisons) {
+        this.comparisonResults = comparisons;
+        
+        // Extraer todos los estudiantes ausentes
+        this.absentStudents = [];
+        comparisons.forEach(comparison => {
+          this.absentStudents.push(...comparison.absentStudents);
+        });
+
+        this.showSnackBar(`Comparación completada: ${comparisons.length} prácticas analizadas`, 'success');
+      } else {
+        this.showSnackBar('No se encontraron prácticas para el período seleccionado', 'error');
+      }
+    } catch (error) {
+      console.error('Error en comparación de asistencias:', error);
+      this.showSnackBar('Error al realizar la comparación de asistencias', 'error');
+    } finally {
+      this.isLoadingComparison = false;
+    }
+  }
+
+  clearComparison() {
+    this.comparisonForm.reset();
+    this.comparisonResults = [];
+    this.absentStudents = [];
+  }
+
+  exportComparisonReport(format: 'csv' | 'pdf') {
+    if (this.comparisonResults.length === 0) {
+      this.showSnackBar('No hay datos de comparación para exportar', 'error');
+      return;
+    }
+
+    this.isExporting = true;
+
+    try {
+      if (format === 'csv') {
+        this.exportComparisonToCSV();
+      } else {
+        this.exportComparisonToPDF();
+      }
+      
+      this.showSnackBar(`Reporte de comparación ${format.toUpperCase()} generado exitosamente`, 'success');
+    } catch (error) {
+      console.error('Error al exportar comparación:', error);
+      this.showSnackBar('Error al generar el reporte de comparación', 'error');
+    } finally {
+      this.isExporting = false;
+    }
+  }
+
+  private exportComparisonToCSV() {
+    // Reporte general de comparación
+    const comparisonHeaders = [
+      'ID Práctica', 'Fecha', 'Horario', 'Asignatura', 'Laboratorio',
+      'Estudiantes Esperados', 'Estudiantes Asistentes', 'Estudiantes Ausentes', 
+      'Tasa de Asistencia (%)'
+    ];
+    
+    const comparisonData = this.comparisonResults.map(comp => [
+      comp.practiceId.toString(),
+      comp.practiceDate,
+      comp.practiceTime,
+      comp.subject,
+      comp.laboratoryName,
+      comp.expectedStudents.toString(),
+      comp.attendedStudents.toString(),
+      comp.absentStudents.length.toString(),
+      comp.attendanceRate.toFixed(2)
+    ]);
+
+    // Reporte de estudiantes ausentes
+    const absentHeaders = [
+      'Código Estudiante', 'Nombre', 'Email', 'ID Práctica', 'Fecha Práctica', 'Horario'
+    ];
+    
+    const absentData = this.absentStudents.map(absent => [
+      absent.userCode,
+      absent.userName,
+      absent.userEmail,
+      absent.practiceId.toString(),
+      absent.practiceDate,
+      absent.reservationTime
+    ]);
+
+    // Combinar ambos reportes
+    const csvContent = [
+      'REPORTE DE COMPARACIÓN DE ASISTENCIAS',
+      `Generado el: ${new Date().toLocaleString('es-CO')}`,
+      `Período: ${this.comparisonForm.get('startDate')?.value} - ${this.comparisonForm.get('endDate')?.value}`,
+      '',
+      'RESUMEN POR PRÁCTICA',
+      comparisonHeaders.join(','),
+      ...comparisonData.map(row => row.join(',')),
+      '',
+      'ESTUDIANTES AUSENTES DETALLADO',
+      absentHeaders.join(','),
+      ...absentData.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const fileName = `comparacion-asistencias-${new Date().toISOString().split('T')[0]}.csv`;
+    saveAs(blob, fileName);
+  }
+
+  private exportComparisonToPDF() {
+    const doc = new jsPDF();
+    
+    // Encabezado
+    doc.setFontSize(18);
+    doc.text('Reporte de Comparación de Asistencias', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Generado el: ${new Date().toLocaleString('es-CO')}`, 20, 30);
+    doc.text(`Período: ${this.comparisonForm.get('startDate')?.value} - ${this.comparisonForm.get('endDate')?.value}`, 20, 40);
+
+    // Estadísticas generales
+    const totalPractices = this.comparisonResults.length;
+    const totalExpectedStudents = this.comparisonResults.reduce((sum, comp) => sum + comp.expectedStudents, 0);
+    const totalAttendedStudents = this.comparisonResults.reduce((sum, comp) => sum + comp.attendedStudents, 0);
+    const avgAttendanceRate = totalPractices > 0 
+      ? (this.comparisonResults.reduce((sum, comp) => sum + comp.attendanceRate, 0) / totalPractices).toFixed(2)
+      : '0.00';
+
+    doc.text(`Total de prácticas analizadas: ${totalPractices}`, 20, 50);
+    doc.text(`Total de estudiantes esperados: ${totalExpectedStudents}`, 20, 60);
+    doc.text(`Total de estudiantes que asistieron: ${totalAttendedStudents}`, 20, 70);
+    doc.text(`Tasa promedio de asistencia: ${avgAttendanceRate}%`, 20, 80);
+
+    // Tabla de comparación
+    const tableData = this.comparisonResults.map(comp => [
+      comp.practiceId.toString(),
+      comp.practiceDate,
+      comp.subject,
+      comp.laboratoryName,
+      comp.expectedStudents.toString(),
+      comp.attendedStudents.toString(),
+      comp.absentStudents.length.toString(),
+      `${comp.attendanceRate.toFixed(2)}%`
+    ]);
+
+    autoTable(doc, {
+      head: [['ID', 'Fecha', 'Asignatura', 'Laboratorio', 'Esperados', 'Asistentes', 'Ausentes', 'Tasa %']],
+      body: tableData,
+      startY: 90,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2
+      },
+      headStyles: {
+        fillColor: [63, 81, 181],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      }
+    });
+
+    // Tabla de estudiantes ausentes si hay datos
+    if (this.absentStudents.length > 0) {
+      const finalY = (doc as any).lastAutoTable.finalY + 20;
+      
+      doc.setFontSize(14);
+      doc.text('Estudiantes Ausentes (Detalle)', 20, finalY);
+
+      const absentTableData = this.absentStudents.map(absent => [
+        absent.userCode,
+        absent.userName,
+        absent.userEmail,
+        absent.practiceDate,
+        absent.reservationTime
+      ]);
+
+      autoTable(doc, {
+        head: [['Código', 'Nombre', 'Email', 'Fecha', 'Horario']],
+        body: absentTableData,
+        startY: finalY + 10,
+        styles: {
+          fontSize: 7,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [244, 67, 54],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        }
+      });
+    }
+
+    const fileName = `comparacion-asistencias-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
   }
 
   private decodeSpecialCharacters(text: string): string {
