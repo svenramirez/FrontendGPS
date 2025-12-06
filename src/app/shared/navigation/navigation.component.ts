@@ -129,7 +129,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
           { label: 'Gestión de Laboratorios', route: '/gestion-laboratorios', icon: 'science' },
           { label: 'Registro Asistencias', route: '/registro-asistencias', icon: 'checklist' },
           { label: 'Servicios de Prácticas', route: '/servicios-practicas', icon: 'assignment' },
-          { label: 'Ingresar Equipos', route: '/ingresar-equipos', icon: 'add_box' }
+          { label: 'Préstamo de Equipos', route: '/prestamo-equipos', icon: 'inventory' }
         ];
       
       case 'DOCENTE':

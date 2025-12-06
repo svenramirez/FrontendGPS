@@ -8,5 +8,6 @@ export const apiConstants = {
         LABORATORIES: '/laboratories',
         ASSIGN_USER_ROLE: '/users/:userCode/role',
         LIST_USER: '/users',
-        PRACTICES: '/practices'
+        PRACTICES: '/practices',
+        LOANS: '/loans',
 };
